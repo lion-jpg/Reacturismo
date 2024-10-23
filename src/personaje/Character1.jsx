@@ -9,7 +9,7 @@ export function Character1({ position, rotation, moveForward, moveBackward, move
   const { scene, animations } = useGLTF('./models/glb/characters/character1.glb')
   
   // Añade este console.log para ver los nombres de las animaciones
-  console.log('Animations:', animations.map(anim => anim.name));
+  // console.log('Animations:', animations.map(anim => anim.name));
 
   const clone = React.useMemo(() => SkeletonUtils.clone(scene), [scene])
   const { nodes, materials } = useGraph(clone)

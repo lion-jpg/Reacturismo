@@ -1,11 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls, Environment, Html } from '@react-three/drei';
+import { OrbitControls, Environment } from '@react-three/drei';
 // import { SueloVerde } from './SueloVerde';
 // import { Letrero } from './Letrero';
 import { Tvmejor } from './Tvmejor';
 import { Character1 } from '../personaje/Character1';
-import Board from './Board'; // Importa el componente Board
+import * as THREE from 'three';
 import '../Scene.css';
 
 // Componente para controlar las limitaciones de OrbitControls
@@ -28,15 +28,10 @@ const ControlledOrbitControls = () => {
 };
 
 const Scene = () => {
-  const [showBoard, setShowBoard] = useState(false);
   const [moveForward, setMoveForward] = useState(false);
   const [moveBackward, setMoveBackward] = useState(false);
   const [moveLeft, setMoveLeft] = useState(false);
   const [moveRight, setMoveRight] = useState(false);
-
-  const handleCloseBoard = () => {
-    setShowBoard(false);
-  };
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -75,7 +70,6 @@ const Scene = () => {
         <Environment files="/fondo/fondo111.hdr" ground={{ height: 10, radius: 100, scale: 20 }} EnvironmentIntensity={1} />
         <pointLight position={[35, 35, 5]} intensity={0.4} />
         <pointLight position={[35, 35, 5]} intensity={0.4} />
-        {/* <SueloVerde position={[0, -0.2, 0]} scale={12} /> */}
         <Tvmejor position={[0, -0.2, -5]} scale={0.012} rotation={[0, -3.2, 0]}/>
         <Character1 
           position={[0, -0.2, 5]} 
@@ -86,21 +80,6 @@ const Scene = () => {
           moveLeft={moveLeft}
           moveRight={moveRight}
         />
-        {/* Botón para mostrar/ocultar el Board */}
-        <Html position={[-0.5, 0.5, -1]}>
-          <button onClick={() => setShowBoard(!showBoard)} className="tiny-board-button">
-            {showBoard ? 'X' : 'i'}
-          </button>
-        </Html>
-
-        {/* Board component */}
-        {showBoard && (
-          <Html position={[0.5, 0.5, -1]} transform occlude>
-            <div className="tiny-board-container">
-              <Board onClose={handleCloseBoard} />
-            </div>
-          </Html>
-        )}
       </Canvas>
     </div>
   );
