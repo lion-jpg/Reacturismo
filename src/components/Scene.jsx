@@ -28,6 +28,7 @@ const ControlledOrbitControls = () => {
 };
 
 const Scene = () => {
+  const tvRef = useRef();
   const [moveForward, setMoveForward] = useState(false);
   const [moveBackward, setMoveBackward] = useState(false);
   const [moveLeft, setMoveLeft] = useState(false);
@@ -70,15 +71,17 @@ const Scene = () => {
         <Environment files="/fondo/fondo111.hdr" ground={{ height: 10, radius: 100, scale: 20 }} EnvironmentIntensity={1} />
         <pointLight position={[35, 35, 5]} intensity={0.4} />
         <pointLight position={[35, 35, 5]} intensity={0.4} />
-        <Tvmejor position={[0, -0.2, -5]} scale={0.012} rotation={[0, -3.2, 0]}/>
+        <Tvmejor ref={tvRef} position={[0, -0.2, -5]} scale={0.012} rotation={[0, -3.2, 0]}/>
+        
         <Character1 
           position={[0, -0.2, 5]} 
-          scale={0.005} 
+          scale={0.003} 
           rotation={[0, -3.2, 0]}
           moveForward={moveForward}
           moveBackward={moveBackward}
           moveLeft={moveLeft}
           moveRight={moveRight}
+          obstacles={[tvRef]}
         />
       </Canvas>
     </div>

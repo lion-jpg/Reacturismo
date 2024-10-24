@@ -1,10 +1,10 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useGraph, useFrame } from '@react-three/fiber'
 import { useGLTF, useAnimations } from '@react-three/drei'
 import { SkeletonUtils } from 'three-stdlib'
 import * as THREE from 'three'
 
-export function Character1({ position, rotation, moveForward, moveBackward, moveLeft, moveRight, ...props }) {
+export function Character1({ position, rotation, moveForward, moveBackward, moveLeft, moveRight, obstacles = [], ...props }) {
   const group = useRef()
   const { scene, animations } = useGLTF('./models/glb/characters/character1.glb')
   
@@ -14,33 +14,84 @@ export function Character1({ position, rotation, moveForward, moveBackward, move
   const clone = React.useMemo(() => SkeletonUtils.clone(scene), [scene])
   const { nodes, materials } = useGraph(clone)
   const { actions } = useAnimations(animations, group)
+  const [autoMove, setAutoMove] = useState(true)
+  const [autoMoveDirection, setAutoMoveDirection] = useState(new THREE.Vector3(0, 0, -1))
 
   useEffect(() => {
-    // console.log(actions);
     actions.Walk.play();
-  },);
-  // useEffect(() => {
-  //   const action = actions['idle']
-  //   if (action) {
-  //     action.reset().fadeIn(0.5).play()
-  //   }
-  // }, [actions])
+  }, [actions]);
+
+  const checkCollision = (newPosition) => {
+    if (!obstacles || obstacles.length === 0) return false;
+
+    const characterBoundingBox = new THREE.Box3().setFromObject(group.current)
+    characterBoundingBox.min.set(newPosition.x - 0.5, newPosition.y - 1, newPosition.z - 0.5)
+    characterBoundingBox.max.set(newPosition.x + 0.5, newPosition.y + 1, newPosition.z + 0.5)
+
+    for (const obstacle of obstacles) {
+      if (obstacle && obstacle.current) {
+        const obstacleBoundingBox = new THREE.Box3().setFromObject(obstacle.current)
+        if (characterBoundingBox.intersectsBox(obstacleBoundingBox)) {
+          return true
+        }
+      }
+    }
+    return false
+  }
 
   useFrame((state, delta) => {
     if (group.current) {
-      const speed = 2
-      if (moveForward) group.current.position.z -= speed * delta
-      if (moveBackward) group.current.position.z += speed * delta
-      if (moveLeft) group.current.position.x -= speed * delta
-      if (moveRight) group.current.position.x += speed * delta
+      const speed = 0.5 
+      let newPosition = new THREE.Vector3().copy(group.current.position)
 
-      // Rotate character based on movement direction
       if (moveForward || moveBackward || moveLeft || moveRight) {
-        const angle = Math.atan2(
+        setAutoMove(false)
+        if (moveForward) newPosition.z -= speed * delta
+        if (moveBackward) newPosition.z += speed * delta
+        if (moveLeft) newPosition.x -= speed * delta
+        if (moveRight) newPosition.x += speed * delta
+      } else {
+        setAutoMove(true)
+      }
+
+      if (autoMove) {
+        newPosition.add(autoMoveDirection.clone().multiplyScalar(speed * delta))
+      }
+
+      // Definir los límites del área
+      const minX = -10, maxX = 10, minZ = -10, maxZ = 10
+
+      // Cambiar dirección si llega a los límites
+      if (newPosition.x <= minX || newPosition.x >= maxX) {
+        setAutoMoveDirection(prev => new THREE.Vector3(-prev.x, prev.y, prev.z))
+      }
+      if (newPosition.z <= minZ || newPosition.z >= maxZ) {
+        setAutoMoveDirection(prev => new THREE.Vector3(prev.x, prev.y, -prev.z))
+      }
+
+      // Limitar el movimiento dentro del área definida
+      newPosition.x = Math.max(minX, Math.min(maxX, newPosition.x))
+      newPosition.z = Math.max(minZ, Math.min(maxZ, newPosition.z))
+
+      // Comprobar colisiones
+      if (!checkCollision(newPosition)) {
+        group.current.position.copy(newPosition)
+      }
+
+      // Rotar el personaje basado en la dirección del movimiento
+      if (moveForward || moveBackward || moveLeft || moveRight || autoMove) {
+        const movementDirection = new THREE.Vector3(
           (moveRight ? 1 : 0) - (moveLeft ? 1 : 0),
+          0,
           (moveBackward ? 1 : 0) - (moveForward ? 1 : 0)
         )
-        group.current.rotation.y = angle
+        if (autoMove) {
+          movementDirection.copy(autoMoveDirection)
+        }
+        if (movementDirection.length() > 0) {
+          const angle = Math.atan2(movementDirection.x, movementDirection.z)
+          group.current.rotation.y = angle
+        }
       }
     }
   })

@@ -2,57 +2,52 @@ import React, { useEffect, useState } from 'react';
 import '../Scene.css'; // Asegúrate de que la ruta sea correcta
 
 const Board = ({ onClose, standalone = false }) => {
-  const [images, setImages] = useState([]);
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchImages = async () => {
+    const fetchEvents = async () => {
       try {
         const response = await fetch('https://backend-culturas.elalto.gob.bo/api/teatro-eventos?populate=*');
         const data = await response.json();
 
-        // Extraer las URLs de las imágenes
-        const imagesData = data.data.map(event => {
-          const imageUrl = event.attributes.imagen_evento?.data[0]?.attributes?.url;
-          return imageUrl ? `https://backend-culturas.elalto.gob.bo${imageUrl}` : null;
-        }).filter(url => url !== null); // Filtrar si no hay imagen
+        const eventsData = data.data.map(event => ({
+          id: event.id,
+          title: event.attributes.titulo_evento,
+          description: event.attributes.descripcion_evento,
+          imageUrl: event.attributes.imagen_evento?.data[0]?.attributes?.url
+            ? `https://backend-culturas.elalto.gob.bo${event.attributes.imagen_evento.data[0].attributes.url}`
+            : null
+        })).filter(event => event.imageUrl !== null);
 
-        setImages(imagesData);
+        setEvents(eventsData);
       } catch (error) {
-        console.error('Error al cargar las imágenes:', error);
+        console.error('Error al cargar los eventos:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchImages();
+    fetchEvents();
   }, []);
 
-  const handleDoubleClick = () => {
-    if (!standalone) {
-      window.open('/board');
-    }
-  };
+  if (loading) {
+    return <div className="loading">Cargando...</div>;
+  }
 
   return (
-    <div className={`tiny-billboard-container ${standalone ? 'standalone' : ''}`} onDoubleClick={handleDoubleClick}>
-      <div className="tiny-billboard-header">
-        <h3>Eventos</h3>
-        {!standalone && <button onClick={onClose} className="tiny-close-button">×</button>}
-      </div>
-      {loading ? (
-        <div className="tiny-loading">Cargando...</div>
-      ) : images.length > 0 ? (
-        <div className="tiny-image-grid">
-          {images.slice(0, standalone ? images.length : 4).map((image, index) => (
-            <div key={index} className="tiny-image-item">
-              <img src={image} alt={`Imagen ${index + 1}`} />
+    <div className={`board-container ${standalone ? 'standalone' : ''}`}>
+      <div className="event-grid">
+        {events.map(event => (
+          <div key={event.id} className="event-card">
+            <img src={event.imageUrl} alt={event.title} className="event-image" />
+            <div className="event-info">
+              <h3>{event.title}</h3>
+              <p>{event.description}</p>
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="tiny-no-images">Sin imágenes</div>
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

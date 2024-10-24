@@ -1,12 +1,15 @@
-import React, { useRef, useEffect } from 'react'
-import { useGLTF, Html, Box } from '@react-three/drei'
+import React, { forwardRef, useRef, useEffect } from 'react'
+import { useGLTF, Html } from '@react-three/drei'
 import { AxesHelper } from 'three'
 import Board from './Board'
 import { useControls } from 'leva'
+import { useNavigate } from 'react-router-dom'
 
-export function Tvmejor(props) {
+export const Tvmejor = forwardRef((props, ref) => {
   const { nodes, materials } = useGLTF('./models/tvmejor.glb')
   const groupRef = useRef()
+  const tvRef = useRef()
+  const navigate = useNavigate()
   const { x, y, z } = useControls({
     x: { value: 1.5, min: -10, max: 10, step: 0.1 },
     y: { value: 0, min: -10, max: 10, step: 0.1 },
@@ -21,9 +24,13 @@ export function Tvmejor(props) {
     }
   }, [])
 
+  const handleDoubleClick = () => {
+    navigate('/board')
+  }
+
   return (
-    <group ref={groupRef} {...props} dispose={null}>
-      <group position={[160.13, 56.563, -0.493]} rotation={[-Math.PI, 0.018, -Math.PI]} scale={12.242}>
+    <group ref={ref} {...props} dispose={null}>
+      <group ref={tvRef} position={[160.13, 56.563, -0.493]} rotation={[-Math.PI, 0.018, -Math.PI]} scale={12.242}>
         <mesh geometry={nodes.MaterialFBXASC032FBXASC0351003.geometry} material={materials.MaterialFBXASC032FBXASC0351} />
         <mesh geometry={nodes.MaterialFBXASC032FBXASC0351003_1.geometry} material={materials.MaterialFBXASC032FBXASC0357} />
         <mesh geometry={nodes.MaterialFBXASC032FBXASC0351003_2.geometry} material={materials.MaterialFBXASC032FBXASC035367FBXASC032SlotFBXASC032FBXASC0351_n} />
@@ -34,13 +41,14 @@ export function Tvmejor(props) {
           occlude
           position={[x, y, z]}
           style={{
-            width: '370px',
-            height: '250px',
-            // overflow: 'hidden',
-            backgroundColor: 'rgba(255, 0, 0, 0.5)', // Fondo rojo semi-transparente
+            width: '400px',
+            height: '300px',
           }}
         >
-          <div style={{ width: '100%', height: '100%'}}>
+          <div 
+            style={{ width: '100%', height: '100%', overflow: 'hidden' }}
+            onDoubleClick={handleDoubleClick}
+          >
             <Board standalone={false} />
           </div>
         </Html>
@@ -66,6 +74,6 @@ export function Tvmejor(props) {
       </group>
     </group>
   )
-}
+})
 
 useGLTF.preload('./models/tvmejor.glb')
